@@ -1,15 +1,17 @@
-**Install**
+# Install
 ```
 composer require koyabu/mysqlbackup
 ```
 
-**Requirement**
+## Requirement
+
 * MySQL with mysqldump set to Global
 * PHP 8+ and composer
 * PHP MySQLi enable
 * Cron job or Task Scheduler
 
-***Feature***
+### Feature
+
 * Backup Daily
 * Backup Monthly
 * Backup Weekly
@@ -18,7 +20,8 @@ composer require koyabu/mysqlbackup
 * Save to Google Drive (for next version)
 * Auto Delete old file (for next version)
 
-**Sample Code**
+### Sample Code
+
 ```
 <?php
 use Koyabu\MysqlBackup\Backup;
@@ -84,5 +87,6 @@ $Backup->run($file_prefix, $file_sufix, true);
 ?>
 ```
 
-**Contact Me**
+## Contact Me
+
 If you want request some feature please contact me at <stieven.kalengkian@gmail.com>

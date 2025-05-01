@@ -1,0 +1,7 @@
+vendor/
+data/
+config.php
+test.php
+.phpdoc/
+00/
+node_modules/

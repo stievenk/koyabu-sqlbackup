@@ -1,0 +1,19 @@
+{
+    "name": "koyabu/mysqlbackup",
+    "type": "library",
+    "license": "MIT",
+    "version" : "1.0.0",
+    "autoload": {
+        "psr-4": {
+            "Koyabu\\MysqlBackup\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "stievenk",
+            "email": "stieven.kalengkian@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}

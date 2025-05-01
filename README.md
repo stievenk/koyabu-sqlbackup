@@ -1,4 +1,5 @@
-# Install
+
+# Install [![Latest Stable Version](https://poser.pugx.org/koyabu/mysqlbackup/downloads)]([https://poser.pugx.org/koyabu/mysqlbackup/downloads](https://packagist.org/packages/koyabu/webapi))
 ```
 composer require koyabu/mysqlbackup
 ```

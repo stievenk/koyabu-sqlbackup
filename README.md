@@ -1,4 +1,4 @@
-***Install***
+**Install**
 ```
 composer require koyabu/mysqlbackup
 ```

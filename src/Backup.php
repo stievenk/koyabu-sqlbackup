@@ -1,5 +1,6 @@
 <?php
 namespace Koyabu\mysqlbackup;
+use Koyabu\Dropbox\Init as DBX;
 
 class Backup {
 
@@ -9,8 +10,11 @@ class Backup {
    public $DB_Backup = [];
    public $mysqldumppath = '';
    public $skipDB = [];
+   public $config;
+
 
    function __construct($config) {
+      $this->config = $config;
       $this->conn = new \mysqli($config['mysql']['host'],$config['mysql']['user'],$config['mysql']['pass'],$config['mysql']['data']);
       $this->getAllDatabases();
       $this->createDir();
@@ -83,13 +87,21 @@ class Backup {
    }
 
    function dump($Database,$fileoutput,$debug = false) {
-      $exec = "{$this->mysqldumppath}mysqldump -uroot ". ( $this->config['mysql']['pass'] ? "-p{$this->config['mysql']['pass']}" : '')  ." {$Database} > {$this->BASE_DIR}{$fileoutput}.sql";
+      $exec = "{$this->mysqldumppath}mysqldump";
+      if ($this->config['mysql']['user']) {
+         $exec .= " -u{$this->config['mysql']['user']}";
+      }
+      if ($this->config['mysql']['pass']) {
+         $exec .= " -p{$this->config['mysql']['pass']}";
+      }
+      $exec .= " {$Database} > {$this->BASE_DIR}{$fileoutput}.sql";
+      
       if ($debug) { echo $exec.PHP_EOL; }
       exec($exec,$retr);
       if ($debug) {
          if ($retr) { print_r($retr); }
       }
-      return "{$this->BASE_DIR}{$Database}.sql";
+      return "{$this->BASE_DIR}{$fileoutput}.sql";
    }
 
    function run($file_prefix = '', $file_sufix ,$debug = false) {
@@ -97,9 +109,20 @@ class Backup {
          if (in_array($this->DB_Backup[$i], $this->skipDB)) {
             continue;
          }
-         $this->dump($this->DB_Backup[$i],$file_prefix.$this->DB_Backup[$i].$file_sufix,$debug);
+         $file = $this->dump($this->DB_Backup[$i],$file_prefix.$this->DB_Backup[$i].$file_sufix,$debug);
+         if ($this->config['dropbox']['sync'] == true and $this->config['dropbox']['refresh_token']) {
+            echo "Dropbox Backup Sync {$file}\n";
+            $r = $this->dbx_Sync($file);
+            if ($debug == true) {
+               print_r($r);
+            }
+         }
       }
    }
 
+   function dbx_Sync($filename) {
+      $DBX = new DBX();
+      return $DBX->upload($filename,'overwrite',$this->config['dropbox']['home_dir']);
+   }
 }
 ?>

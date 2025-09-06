@@ -1,0 +1,59 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "6ddfe998130f2959e1ef2d705dd46c37",
+    "packages": [
+        {
+            "name": "koyabu/dropbox",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/stievenk/koyabu-php-dropbox.git",
+                "reference": "a322f3953e573007d2141a5e3de5156f1881178e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/stievenk/koyabu-php-dropbox/zipball/a322f3953e573007d2141a5e3de5156f1881178e",
+                "reference": "a322f3953e573007d2141a5e3de5156f1881178e",
+                "shasum": ""
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Koyabu\\Dropbox\\": "vendor/src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "stievenk",
+                    "email": "stieven.kalengkian@gmail.com"
+                }
+            ],
+            "description": "Dropbox REST API Library",
+            "support": {
+                "issues": "https://github.com/stievenk/koyabu-php-dropbox/issues",
+                "source": "https://github.com/stievenk/koyabu-php-dropbox/tree/master"
+            },
+            "time": "2024-07-10T13:09:10+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "koyabu/dropbox": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
+}

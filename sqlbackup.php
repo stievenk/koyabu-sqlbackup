@@ -23,6 +23,15 @@ $config['mysql']['pass']="";
 $config['mysql']['port']="3306";
 $config['mysql']['data']="test";
 
+$config['dropbox']['app_key'] = '';
+$config['dropbox']['app_secret'] = '';
+$config['dropbox']['refresh_token'] = '';
+$config['dropbox']['access_token'] = '';
+
+$config['dropbox']['home_dir'] = '/SQL-Backup/';
+
+$config['dropbox']['sync'] = false; // set true to Sync with dropbox, make sure refresh_token already set
+
 include 'vendor/autoload.php';
 
 $Backup = new Backup($config);

@@ -1,28 +1,29 @@
+# Install [![Latest Stable Version](https://poser.pugx.org/koyabu/mysqlbackup/downloads)](<[https://poser.pugx.org/koyabu/mysqlbackup/downloads](https://packagist.org/packages/koyabu/webapi)>)
 
-# Install [![Latest Stable Version](https://poser.pugx.org/koyabu/mysqlbackup/downloads)]([https://poser.pugx.org/koyabu/mysqlbackup/downloads](https://packagist.org/packages/koyabu/webapi))
 ```
 composer require koyabu/mysqlbackup
 ```
 
 ## Change log
-* Sync to Dropbox
+
+- Sync to Dropbox
 
 ## Requirement
 
-* MySQL with mysqldump set to Global
-* PHP 8+ and composer
-* PHP MySQLi enable
-* Cron job or Task Scheduler
+- MySQL with mysqldump set to Global
+- PHP 8+ and composer
+- PHP MySQLi enable
+- Cron job or Task Scheduler
 
 ### Feature
 
-* Backup Daily
-* Backup Monthly
-* Backup Weekly
-* Backup All (with exeption filter)
-* Save to Dropbox (for next version)
-* Save to Google Drive (for next version)
-* Auto Delete old file (for next version)
+- Backup Daily
+- Backup Monthly
+- Backup Weekly
+- Backup All (with exeption filter)
+- Save to Dropbox (for next version)
+- Save to Google Drive (for next version)
+- Auto Delete old file (for next version)
 
 ### Sample Code
 
@@ -38,11 +39,11 @@ use Koyabu\MysqlBackup\Backup;
  * $Backup->setMysqlDumpPath('/usr/bin/');
  * Windows Example:
  * $Backup->setMysqlDumpPath('C:\\Program Files\\MySQL\\MySQL Server 5.7\\bin\\');
- * 
+ *
  * You can run this script with cron job or task scheduler
  * set to run everyday (see cron manual or task scheluder manual):
  * /usr/bin/php sqlbackup.php > /dev/null 2>&1 &
- * 
+ *
  * For Windows recommended use .bat file
  */
 $config = array();
@@ -83,7 +84,7 @@ $Backup->Weekly(['hwm'],4);
 
 /*
 * Example: All DB Backup
-* $Backup->All(); 
+* $Backup->All();
 * this is Alias for $Backup->Daily(); without parameter
 *
 * or you can backup all database with filter parameter:

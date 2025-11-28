@@ -2,6 +2,7 @@
 namespace Koyabu\mysqlbackup;
 use Koyabu\DropboxApi\Dropbox;
 use Koyabu\Googledriveapi\GoogleDriveClient;
+use Koyabu\TelegramAPI\Telegram;
 
 class Backup {
 
@@ -114,6 +115,7 @@ class Backup {
    }
 
    function run($file_prefix = '', $file_sufix = '' ,$debug = false) {
+      $telegram = [];
       for ($i = 0; $i < count($this->DB_Backup); $i++) {
          if (in_array($this->DB_Backup[$i], $this->skipDB)) {
             continue;
@@ -142,8 +144,13 @@ class Backup {
             'dropbox' => $dbx ? $dbx : null,
             'gdrive' => $gdx ? $gdx : null
          ];
+         $telegram[$this->DB_Backup[$i]] = $log;
          $this->json_log($log);
          $this->db_log($this->DB_Backup[$i],$log);
+      }
+      
+      if (!empty($telegram)) { 
+         $this->sendTelegram(json_encode($telegram,JSON_PRETTY_PRINT)); 
       }
    }
 
@@ -353,5 +360,13 @@ class Backup {
       if (!empty($cfg['weekly'])) { $this->Weekly($cfg['weekly'],$cfg['weekly_start'] ?? 0); }
    }
 
+   function sendTelegram($text) {
+      if (empty($this->config['telegram'])) { return false; }
+      if (empty($this->config['telegram']['chat_id'])) { return false; }
+      $bot = new Telegram($this->config['telegram']);
+      $r = $bot->send($this->config['telegram']['chat_id'],$text);
+      print_r($r);
+      return $r;
+   }
 }
 ?>

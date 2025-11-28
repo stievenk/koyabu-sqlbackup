@@ -18,7 +18,8 @@
     "prefer-stable": true,
     "require": {
         "koyabu/dropboxapi": "dev-master",
-        "koyabu/googledriveapi": "dev-master"
+        "koyabu/googledriveapi": "dev-master",
+        "koyabu/telegramapi": "dev-main"
 
     }
 }

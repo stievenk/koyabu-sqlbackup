@@ -6,7 +6,7 @@ composer require koyabu/mysqlbackup
 
 ## Change log
 
-- Sync to Dropbox
+- Sync to Dropbox (https://github.com/stievenk/DropboxAPIClient)
 
 ## Requirement
 
@@ -21,9 +21,13 @@ composer require koyabu/mysqlbackup
 - Backup Monthly
 - Backup Weekly
 - Backup All (with exeption filter)
-- Save to Dropbox (for next version)
-- Save to Google Drive (for next version)
-- Auto Delete old file (for next version)
+- Save to Dropbox
+- Save to Google Drive
+- Auto Delete old file (under develop)
+- Log File: /your-backup-dir/data.json
+- Log File: /your-backup-dir/backup.json >> backup log
+- Don't remove file /your-backup-dir/gdrive.json
+  if you sync to Google Drive it will create new folder if folder_id not found in gdrive.json
 
 ### Sample Code
 
@@ -46,25 +50,51 @@ use Koyabu\MysqlBackup\Backup;
  *
  * For Windows recommended use .bat file
  */
-$config = array();
-$config['mysql']['host']="localhost";
-$config['mysql']['user']="root";
-$config['mysql']['pass']="";
-$config['mysql']['port']="3306";
-$config['mysql']['data']="test";
+$config = [
+    'mysql' => [
+        'host' => 'localhost',
+        'user' => 'root',
+        'pass' => '',
+        'port' => '3306',
+        'data' => 'test'
+    ],
+    /**
+     * Dropbox Sync
+     * please read >> https://github.com/stievenk/DropboxAPIClient
+    */
+    'dropbox' => [
+        'sync'              => true,
+        'app_key'           => '',
+        'app_secret'        => '',
+        'access_token'      => '',
+        'refresh_token'      => '',
+        'auto_refresh'      => true,
+        'home_dir'          => '/SQL-Backup/'
+    ],
+    /**
+     * Google Drive Sync
+    */
+    'gdrive' => [
+        'sync'              => true,
+        'client_id'         => '',
+        'client_secret'     => '',
+        'access_token'      => '',
+        'refresh_token'     => '',
+        'redirect_url'      => 'http://localhost',
+        'folder'            => 'SQL-backup'
+    ],
 
-$config['dropbox']['app_key'] = '';
-$config['dropbox']['app_secret'] = '';
-$config['dropbox']['refresh_token'] = '';
-$config['dropbox']['access_token'] = '';
-
-$config['dropbox']['home_dir'] = '/SQL-Backup/';
-
-$config['dropbox']['sync'] = false; // set true to Sync with dropbox, make sure refresh_token already set
+    'zip' => [
+        'compress'          => true,
+        'exec'              => 'bzip2 -z --force'
+    ]
+];
 
 include 'vendor/autoload.php';
 
 $Backup = new Backup($config);
+
+// Database to Skip backup
 $Backup->skipAlways(['performance_schema','mysql','test']);
 
 /*
@@ -73,14 +103,14 @@ Set Dir where file backup will be saved
 $Backup->setDir('./data/sqlbackup/');
 
 // Backup Daily for specific database
-$Backup->Daily(['aknj']);
+$Backup->Daily(['db1']);
 // if parameter = null -> this will backup all database; alias $Backup->All();
 
 // Backup Monthly specific database every date 28 of month
-$Backup->Monthly(['wagw'],28);
+$Backup->Monthly(['db2'],28);
 
 // Backup Every week on Thursday (0 = Sunday, 6 = Saturday)
-$Backup->Weekly(['hwm'],4);
+$Backup->Weekly(['db3'],4);
 
 /*
 * Example: All DB Backup

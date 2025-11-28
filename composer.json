@@ -15,7 +15,10 @@
         }
     ],
     "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
-        "koyabu/dropbox": "dev-master"
+        "koyabu/dropboxapi": "dev-master",
+        "koyabu/googledriveapi": "dev-master"
+
     }
 }

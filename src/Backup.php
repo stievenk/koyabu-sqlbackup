@@ -1,6 +1,7 @@
 <?php
 namespace Koyabu\mysqlbackup;
-use Koyabu\Dropbox\Init as DBX;
+use Koyabu\DropboxApi\Dropbox;
+use Koyabu\Googledriveapi\GoogleDriveClient;
 
 class Backup {
 
@@ -104,25 +105,191 @@ class Backup {
       return "{$this->BASE_DIR}{$fileoutput}.sql";
    }
 
-   function run($file_prefix = '', $file_sufix ,$debug = false) {
+   function run($file_prefix = '', $file_sufix = '' ,$debug = false) {
       for ($i = 0; $i < count($this->DB_Backup); $i++) {
          if (in_array($this->DB_Backup[$i], $this->skipDB)) {
             continue;
          }
          $file = $this->dump($this->DB_Backup[$i],$file_prefix.$this->DB_Backup[$i].$file_sufix,$debug);
-         if ($this->config['dropbox']['sync'] == true and $this->config['dropbox']['refresh_token']) {
-            echo "Dropbox Backup Sync {$file}\n";
-            $r = $this->dbx_Sync($file);
-            if ($debug == true) {
-               print_r($r);
+         if ($this->config['zip']['compress'] == true) {
+            if (!empty($this->config['zip']['exec'])) {
+               @exec($this->config['zip']['exec'].' '.$file);
+               echo $res ? $res.PHP_EOL : '';
+               $file = $file.'.bz2';
             }
          }
+         if ($this->config['dropbox']['sync'] == true) {
+            $dbx = $this->dbx_sync($file);
+         }
+         if ($this->config['gdrive']['sync'] == true) {
+            $gdx = $this->gdrive_sync($file);
+         }
+         $log = [
+            'database' => $this->DB_Backup[$i],
+            'datetime' => date("Y-m-d H:i:s"),
+            'base_dir' => $this->BASE_DIR,
+            'filename' => basename($file),
+            'filesize' => filesize($file),
+            'file_md5' => md5_file($file),
+            'dropbox' => $dbx,
+            'gdrive' => $gdx
+         ];
+         $this->json_log($log);
+         $this->db_log($this->DB_Backup[$i],$log);
       }
    }
 
-   function dbx_Sync($filename) {
-      $DBX = new DBX();
-      return $DBX->upload($filename,'overwrite',$this->config['dropbox']['home_dir']);
+   function gdrive_sync($filename) {
+      if (!is_array($this->config['gdrive'])) { 
+         echo "Invalid config Dropbox".PHP_EOL;
+         return false; 
+      }
+      if ((
+         empty($this->config['gdrive']['client_id']) or empty($this->config['gdrive']['client_secret']))
+         and empty($this->config['gdrive']['refresh_token'])
+         ) {
+            echo "Gogole config not found!".PHP_EOL; 
+            return false; 
+         }
+      echo "Google Drive Sync\n";
+      $drive = new GoogleDriveClient($this->config['gdrive']);
+      $folder = $this->config['gdrive']['folder'] ?? 'SQL_backup';
+      $gDriveFile = $this->BASE_DIR . 'gdrive.json';
+      if (!file_exists($gDriveFile)) { file_put_contents($gDriveFile,''); }
+      $cfg = json_decode(file_get_contents($gDriveFile),true);
+      if (empty($cfg['path'])) {
+         // Create Folder
+         $result = $drive->createFolder($folder);
+         $cfg['path']['id'] = $result->id;
+         $cfg['path']['parents'] = $result->parents;
+         $cfg['path']['name'] = $folder;
+      }
+      $res = $drive->uploadFile($filename, basename($filename),$cfg['path']['id']);
+      if ($res->id) {
+         $drive->createShareLink($res->id, 'reader', 'anyone');
+         $info = $drive->fileInfo($res->id);
+         if ($info) {
+            $cfg['file'] = $info;
+         }
+         $cfg['file']['id'] = $cfg['file']['id'] ?? $res->id;
+         $cfg['file']['name'] = $cfg['file']['name'] ?? basename($filename);
+      }
+      file_put_contents($gDriveFile,json_encode($cfg,JSON_PRETTY_PRINT));
+      return $cfg;
    }
+
+   function dbx_sync($filename) {
+      if (!is_array($this->config['dropbox'])) { 
+         echo "Invalid config Dropbox".PHP_EOL;
+         return false; 
+      }
+      if ((
+         empty($this->config['dropbox']['app_key']) or empty($this->config['dropbox']['app_secret']))
+         and empty($this->config['dropbox']['refresh_token'])
+         ) {
+            echo "Dropbox config not found!".PHP_EOL; 
+            return false; 
+         }
+      echo "Dropbox Sync\n";
+      $DBX = new Dropbox($this->config['dropbox']);
+      if($res = $DBX->upload($filename)) {
+         return $res;
+      } else {
+         echo "DBX Error:". $DBX->error.PHP_EOL;
+      }
+   }
+
+   function json_log($log) {
+      $fjson = $this->BASE_DIR.'backup.json';
+      if (!file_exists($fjson)) {
+         file_put_contents($fjson, '');
+      }
+
+      $data = file_get_contents($fjson);
+      $json = json_decode($data, true) ?? [];
+
+      $numericKeys = array_filter(array_keys($json), 'is_numeric');
+
+      if (count($numericKeys) >= 250) {
+         sort($numericKeys, SORT_NUMERIC);
+         unset($json[$numericKeys[0]]);
+      }
+
+      $json[] = $log;
+
+      $json = array_merge(
+         array_filter($json, fn($v, $k) => !is_numeric($k), ARRAY_FILTER_USE_BOTH),
+         array_values(array_filter($json, fn($v, $k) => is_numeric($k), ARRAY_FILTER_USE_BOTH))
+      );
+
+      file_put_contents($fjson, json_encode($json, JSON_PRETTY_PRINT));
+   }
+
+   function db_log($dbname,$log) {
+      $filelog = $this->BASE_DIR . 'data.json';
+      if (!file_exists($filelog)) {
+         file_put_contents($filelog,'');
+      }
+      $json = file_get_contents($filelog);
+      $data = json_decode($json,true) ?? [];
+      if (empty($data[$dbname])) {
+         $logs = $log;
+         unset($logs['gdrive'],$logs['dropbox']);
+         $data[$dbname] = $logs;
+      }
+      $data[$dbname]['local'][] = $log['filename'];
+      $data[$dbname]['dropbox'][] = $log['dropbox'];
+      $data[$dbname]['gdrive'][] = $log['gdrive'];
+      file_put_contents($filelog, json_encode($data, JSON_PRETTY_PRINT));
+   }
+
+   function removeOldFile($max = 10, $remote = false) {
+      $filelog = $this->BASE_DIR . 'data.json';
+      if (file_exists($filelog)) {
+         $data = json_decode(file_get_contents($filelog),true) ?? [];
+      }
+      foreach($data as $k => $v) {
+         if (is_array($v['local'])) {
+            $keys = array_keys($v['local']);
+            $oldData = $v['local'][$keys[0]];
+            if (count($keys) > $max) {
+               // Remove 1st local
+               $fileremove = $this->BASE_DIR . $oldData;
+               if (file_exists($fileremove) and is_file($fileremove)) {
+                  echo "Delete {$fileremove}\n";
+                  @unlink($fileremove);
+               }
+               unset($data[$k]['local'][$keys[0]]);
+            }
+         }
+
+         if ($remote == true) {
+            if (is_array($v['dropbox'])) {
+               $keys = array_keys($v['dropbox']);
+               if (count($keys) > $max) {
+                  $oldData = $v['dropbox'][$keys[0]];
+                  if (!empty($oldData)) {
+                     echo "Dropbox Remove Old File:";
+                     $DBX = new Dropbox($this->config['dropbox']);
+                     $r = $DBX->delete($oldData['path_lower']);
+                     print_r($r);
+                     echo "\n";
+                  }
+                  unset($data[$k]['dropbox'][$keys[0]]);
+               }
+            }
+            if (is_array($v['gdrive'])) {
+               $keys = array_keys($v['gdrive']);
+               if (count($keys) > $max) {
+                  $oldData = $v['gdrive'][$keys[0]];
+                  $fileId = $oldData['file']['id'];
+                  print_r($oldData);
+               }
+            }
+         }
+      }
+      file_put_contents($filelog,json_encode($data,JSON_PRETTY_PRINT));
+   }
+
 }
 ?>

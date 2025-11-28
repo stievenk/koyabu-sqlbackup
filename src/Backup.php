@@ -40,11 +40,11 @@ class Backup {
    }
 
    function Daily($databases = []) {
-      if (count($databases) > 0) {
+      if (is_array($databases)) {
          $this->DB_Backup = array_merge($this->DB_Backup,$databases);
          $this->DB_Backup = array_unique($this->DB_Backup);
          sort($this->DB_Backup);
-      } else {
+      } else if ($databases == 'all') {
          $this->DB_Backup = $this->Databases;
       }
    }
@@ -329,6 +329,28 @@ class Backup {
          }
       }
       file_put_contents($filelog,json_encode($data,JSON_PRETTY_PRINT));
+   }
+
+   function loadConfig($fileConfig) {
+      if (!file_exists($fileConfig)) { return false; }
+      $cfg = json_decode(file_get_contents($fileConfig),true) ?? [];
+      
+      if (!empty($cfg['removeOldFile'])) {
+         $this->removeOldFile((int) $cfg['removeOldFile'],true);
+      }
+      
+      if ($cfg['mysqldump_path']) {
+         $this->setMysqlDumpPath($cfg['mysqldump_path']);
+      }
+
+      $this->skipAlways($cfg['always_skip'] ?? ['information_schema','performance_schema','mysql','test','sys']);
+      if (!empty($cfg['save_dir'])) {
+         $this->setDir($cfg['save_dir']);
+      }
+
+      if (!empty($cfg['daily'])) { $this->Daily($cfg['daily']); }
+      if (!empty($cfg['monthly'])) { $this->Monthly($cfg['monthly'],$cfg['monthly_start'] ?? 1); }
+      if (!empty($cfg['weekly'])) { $this->Weekly($cfg['weekly'],$cfg['weekly_start'] ?? 0); }
    }
 
 }

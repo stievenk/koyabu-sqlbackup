@@ -1,0 +1,10 @@
+
+{
+    "daily"     : "all",
+    "weekly"    : "all",
+    "monthly"   : "all",
+    "monthly_start" : 1,
+    "weekly_start"  : 0,
+    "removeOldFile" : 10,
+    "save_dir"  : "./data/"
+}

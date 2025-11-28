@@ -134,21 +134,25 @@ class Backup {
          if ($this->config['gdrive']['sync'] == true) {
             $gdx = $this->gdrive_sync($file);
          }
+         $filesize = filesize($file);
          $log = [
             'database' => $this->DB_Backup[$i],
             'datetime' => date("Y-m-d H:i:s"),
             'base_dir' => $this->BASE_DIR,
             'filename' => basename($file),
-            'filesize' => filesize($file),
+            'filesize' => $filesize,
             'file_md5' => md5_file($file),
             'dropbox' => $dbx ? $dbx : null,
             'gdrive' => $gdx ? $gdx : null
          ];
-         $telegram[$this->DB_Backup[$i]] = $log;
          $this->json_log($log);
          $this->db_log($this->DB_Backup[$i],$log);
+         unset($log['dropbpx'],$log['gdrive']);
+         $telegram[$this->DB_Backup[$i]]=[
+            'file' => basename($file),
+            'size' => round(($filesize / 1024 / 1024),2) .'MB'
+         ];
       }
-      
       if (!empty($telegram)) { 
          $this->sendTelegram(json_encode($telegram,JSON_PRETTY_PRINT)); 
       }

@@ -6,3 +6,4 @@ test.php
 00/
 node_modules/
 composer.lock
+test*

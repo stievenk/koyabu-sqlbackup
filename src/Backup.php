@@ -51,17 +51,25 @@ class Backup {
 
    function Weekly($databases = [], $weekday = 1) {
       if (date("w") == $weekday) {
-         $this->DB_Backup = array_merge($this->DB_Backup,$databases);
-         $this->DB_Backup = array_unique($this->DB_Backup);
-         sort($this->DB_Backup);
+         if (is_array($databases)) {
+            $this->DB_Backup = array_merge($this->DB_Backup,$databases);
+            $this->DB_Backup = array_unique($this->DB_Backup);
+            sort($this->DB_Backup);
+         } else if ($databases == 'all') {
+            $this->DB_Backup = $this->Databases;
+         }
       }
    }
 
    function Monthly($databases = [], $montlhyday = 1) {
       if (date("d") == $montlhyday) {
-         $this->DB_Backup = array_merge($this->DB_Backup,$databases);
-         $this->DB_Backup = array_unique($this->DB_Backup);
-         sort($this->DB_Backup);
+         if (is_array($databases)) {
+            $this->DB_Backup = array_merge($this->DB_Backup,$databases);
+            $this->DB_Backup = array_unique($this->DB_Backup);
+            sort($this->DB_Backup);
+         } else if ($databases == 'all') {
+            $this->DB_Backup = $this->Databases;
+         }
       }
    }
 

@@ -131,8 +131,8 @@ class Backup {
             'filename' => basename($file),
             'filesize' => filesize($file),
             'file_md5' => md5_file($file),
-            'dropbox' => $dbx,
-            'gdrive' => $gdx
+            'dropbox' => $dbx ? $dbx : null,
+            'gdrive' => $gdx ? $gdx : null
          ];
          $this->json_log($log);
          $this->db_log($this->DB_Backup[$i],$log);
@@ -151,7 +151,8 @@ class Backup {
             echo "Gogole config not found!".PHP_EOL; 
             return false; 
          }
-      echo "Google Drive Sync\n";
+      echo "Google Drive Sync ";
+      // print_r($this->config['gdrive']); exit;
       $drive = new GoogleDriveClient($this->config['gdrive']);
       $folder = $this->config['gdrive']['folder'] ?? 'SQL_backup';
       $gDriveFile = $this->BASE_DIR . 'gdrive.json';
@@ -166,16 +167,21 @@ class Backup {
       }
       $res = $drive->uploadFile($filename, basename($filename),$cfg['path']['id']);
       if ($res->id) {
+         unset($cfg['file']);
          $drive->createShareLink($res->id, 'reader', 'anyone');
          $info = $drive->fileInfo($res->id);
          if ($info) {
             $cfg['file'] = $info;
+         } else {
+            $cfg['file']['id'] = $res->id;
+            $cfg['file']['name'] = basename($filename);
          }
-         $cfg['file']['id'] = $cfg['file']['id'] ?? $res->id;
-         $cfg['file']['name'] = $cfg['file']['name'] ?? basename($filename);
+         file_put_contents($gDriveFile,json_encode($cfg,JSON_PRETTY_PRINT));
+         return $cfg;
+      } else {
+         echo $drive->lastError."\n";
+         return false;
       }
-      file_put_contents($gDriveFile,json_encode($cfg,JSON_PRETTY_PRINT));
-      return $cfg;
    }
 
    function dbx_sync($filename) {
@@ -238,8 +244,8 @@ class Backup {
          $data[$dbname] = $logs;
       }
       $data[$dbname]['local'][] = $log['filename'];
-      $data[$dbname]['dropbox'][] = $log['dropbox'];
-      $data[$dbname]['gdrive'][] = $log['gdrive'];
+      if (!empty($log['dropbox'])) { $data[$dbname]['dropbox'][] = $log['dropbox']; }
+      if (!empty($log['gdrive'])) { $data[$dbname]['gdrive'][] = $log['gdrive']; }
       file_put_contents($filelog, json_encode($data, JSON_PRETTY_PRINT));
    }
 
@@ -283,9 +289,35 @@ class Backup {
                if (count($keys) > $max) {
                   $oldData = $v['gdrive'][$keys[0]];
                   $fileId = $oldData['file']['id'];
-                  print_r($oldData);
+                  if (!empty($fileId)) {
+                     $drive = new GoogleDriveClient($this->config['gdrive']);
+                     echo "Remove file {$fileId} from Google Drive\n";
+                     $drive->delete($fileId);
+                  }
+                  unset($data[$k]['gdrive'][$keys[0]]);
                }
             }
+         }
+
+         if (is_array($data[$k]['local'])) {
+            $data[$k]['local'] = array_merge(
+               array_filter($data[$k]['local'], fn($v, $k) => !is_numeric($k), ARRAY_FILTER_USE_BOTH),
+               array_values(array_filter($data[$k]['local'], fn($v, $k) => is_numeric($k), ARRAY_FILTER_USE_BOTH))
+            );
+         }
+
+         if (is_array($data[$k]['dropbox'])) {
+            $data[$k]['dropbox'] = array_merge(
+               array_filter($data[$k]['dropbox'], fn($v, $k) => !is_numeric($k), ARRAY_FILTER_USE_BOTH),
+               array_values(array_filter($data[$k]['dropbox'], fn($v, $k) => is_numeric($k), ARRAY_FILTER_USE_BOTH))
+            );
+         }
+
+         if (is_array($data[$k]['gdrive'])) {
+            $data[$k]['gdrive'] = array_merge(
+               array_filter($data[$k]['gdrive'], fn($v, $k) => !is_numeric($k), ARRAY_FILTER_USE_BOTH),
+               array_values(array_filter($data[$k]['gdrive'], fn($v, $k) => is_numeric($k), ARRAY_FILTER_USE_BOTH))
+            );
          }
       }
       file_put_contents($filelog,json_encode($data,JSON_PRETTY_PRINT));

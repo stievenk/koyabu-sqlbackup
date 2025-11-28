@@ -7,6 +7,7 @@ composer require koyabu/mysqlbackup
 ## Change log
 
 - Sync to Dropbox (https://github.com/stievenk/DropboxAPIClient)
+- Sync to Google Drive (https://github.com/stievenk/GoogleDriveAPI)
 
 ## Requirement
 
@@ -14,6 +15,7 @@ composer require koyabu/mysqlbackup
 - PHP 8+ and composer
 - PHP MySQLi enable
 - Cron job or Task Scheduler
+- bzip2 (optional, only if compress set = true)
 
 ### Feature
 
@@ -23,7 +25,7 @@ composer require koyabu/mysqlbackup
 - Backup All (with exeption filter)
 - Save to Dropbox
 - Save to Google Drive
-- Auto Delete old file (under develop)
+- Auto Delete old file
 - Log File: /your-backup-dir/data.json
 - Log File: /your-backup-dir/backup.json >> backup log
 - Don't remove file /your-backup-dir/gdrive.json
@@ -63,7 +65,7 @@ $config = [
      * please read >> https://github.com/stievenk/DropboxAPIClient
     */
     'dropbox' => [
-        'sync'              => true,
+        'sync'              => false,
         'app_key'           => '',
         'app_secret'        => '',
         'access_token'      => '',
@@ -75,17 +77,17 @@ $config = [
      * Google Drive Sync
     */
     'gdrive' => [
-        'sync'              => true,
+        'sync'              => false,
         'client_id'         => '',
         'client_secret'     => '',
         'access_token'      => '',
         'refresh_token'     => '',
-        'redirect_url'      => 'http://localhost',
+        'redirect_uri'      => 'http://localhost',
         'folder'            => 'SQL-backup'
     ],
 
     'zip' => [
-        'compress'          => true,
+        'compress'          => false,
         'exec'              => 'bzip2 -z --force'
     ]
 ];
@@ -93,6 +95,10 @@ $config = [
 include 'vendor/autoload.php';
 
 $Backup = new Backup($config);
+
+// $Backup->removeOldFile($num_file_to_keep,$boolean_remove_remote_file_dropbox_gdrive);
+// Remove Old File and keep latest 10
+$Backup->removeOldFile(10,true);
 
 // Database to Skip backup
 $Backup->skipAlways(['performance_schema','mysql','test']);

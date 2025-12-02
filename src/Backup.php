@@ -19,7 +19,7 @@ class Backup {
       $this->config = $config;
       $this->conn = new \mysqli($config['mysql']['host'],$config['mysql']['user'],$config['mysql']['pass'],$config['mysql']['data']);
       $this->getAllDatabases();
-      $this->createDir();
+      // $this->createDir();
    }
 
    function setDir($dir) {
@@ -257,7 +257,7 @@ class Backup {
       $data[$dbname]['local'][] = $log['filename'];
       if (!empty($log['dropbox'])) { $data[$dbname]['dropbox'][] = $log['dropbox']; }
       if (!empty($log['gdrive'])) { $data[$dbname]['gdrive'][] = $log['gdrive']; }
-      print_r($data);
+      // print_r($data);
       file_put_contents($filelog, json_encode($data, JSON_PRETTY_PRINT));
    }
 

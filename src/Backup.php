@@ -128,6 +128,7 @@ class Backup {
                $file = $file.'.bz2';
             }
          }
+       echo $file."\n";
          if ($this->config['dropbox']['sync'] == true) {
             $dbx = $this->dbx_sync($file);
          }
@@ -145,16 +146,11 @@ class Backup {
             'dropbox' => $dbx ? $dbx : null,
             'gdrive' => $gdx ? $gdx : null
          ];
-         $this->json_log($log);
+         
          $this->db_log($this->DB_Backup[$i],$log);
-         unset($log['dropbpx'],$log['gdrive']);
-         $telegram[$this->DB_Backup[$i]]=[
-            'file' => basename($file),
-            'size' => round(($filesize / 1024 / 1024),2) .'MB'
-         ];
       }
       if (!empty($telegram)) { 
-         $this->sendTelegram(json_encode($telegram,JSON_PRETTY_PRINT)); 
+         // $this->sendTelegram(json_encode($telegram,JSON_PRETTY_PRINT)); 
       }
    }
 
@@ -251,24 +247,22 @@ class Backup {
    }
 
    function db_log($dbname,$log) {
+      // print_r($log);
       $filelog = $this->BASE_DIR . 'data.json';
       if (!file_exists($filelog)) {
          file_put_contents($filelog,'');
       }
       $json = file_get_contents($filelog);
       $data = json_decode($json,true) ?? [];
-      if (empty($data[$dbname])) {
-         $logs = $log;
-         unset($logs['gdrive'],$logs['dropbox']);
-         $data[$dbname] = $logs;
-      }
       $data[$dbname]['local'][] = $log['filename'];
       if (!empty($log['dropbox'])) { $data[$dbname]['dropbox'][] = $log['dropbox']; }
       if (!empty($log['gdrive'])) { $data[$dbname]['gdrive'][] = $log['gdrive']; }
+      print_r($data);
       file_put_contents($filelog, json_encode($data, JSON_PRETTY_PRINT));
    }
 
    function removeOldFile($max = 10, $remote = false) {
+      return;
       $filelog = $this->BASE_DIR . 'data.json';
       if (file_exists($filelog)) {
          $data = json_decode(file_get_contents($filelog),true) ?? [];

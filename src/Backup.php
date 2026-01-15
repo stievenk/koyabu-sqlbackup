@@ -187,7 +187,7 @@ class Backup {
             $cfg['dropbox']['files'][] = $res;
          }
       }
-      // Remove Old File
+      // Remove Old File Dropbox
       if (count($cfg['dropbox']['files']) > $limit) {
          for($i = 0; $i < count($cfg['dropbox']['files']) - $limit; $i++) {
             $r = $this->DropboxDelete($cfg['dropbox']['files'][$i]['path_lower']);
@@ -195,6 +195,22 @@ class Backup {
             echo "REMOVE: ".$cfg['dropbox']['files'][$i]['path_lower'].PHP_EOL;
          }
          $cfg['dropbox']['files'] = array_slice($cfg['dropbox']['files'],-$limit);
+      }
+
+      if ($this->config['gdrive']['sync'] === true) {
+         $res = $this->GoogleDriveSync($file);
+         $cfg['gdrive']['last_update'] = date("Y-m-d H:i:s");
+         $cfg['gdrive']['files'][] = $res;
+      }
+
+      // Remove Old File Google Drive
+      if (count($cfg['gdrive']['files']) > $limit) {
+         for($i = 0; $i < count($cfg['gdrive']['files']) - $limit; $i++) {
+            $r = $this->GoogleDriveDelete($cfg['gdrive']['files'][$i]['id']);
+            print_r($r);
+            echo "REMOVE: ".$cfg['gdrive']['files'][$i]['name'].PHP_EOL;
+         }
+         $cfg['gdrive']['files'] = array_slice($cfg['gdrive']['files'],-$limit);
       }
 
       file_put_contents($savePath.'backup.json',json_encode($cfg,JSON_PRETTY_PRINT));
@@ -242,8 +258,64 @@ class Backup {
       }
    }
 
-   public function GoogleDriveSync($filename, $Path = '/') {
+   public function GoogleDriveSync($filename) {
+      if (!is_array($this->config['gdrive'])) { 
+         echo "Invalid config Dropbox".PHP_EOL;
+         return false; 
+      }
+      if ((
+         empty($this->config['gdrive']['client_id']) or empty($this->config['gdrive']['client_secret']))
+         and empty($this->config['gdrive']['refresh_token'])
+         ) {
+            echo "Gogole config not found!".PHP_EOL; 
+            return false; 
+         }
+      echo "Google Drive Sync ";
+      $drive = new GoogleDriveClient($this->config['gdrive']);
+      $folder = $this->config['gdrive']['folder'] ?? 'SQL_backup';
+      $gDriveFile = $this->BASE_DIR . 'gdrive.json';
+      if (!file_exists($gDriveFile)) { file_put_contents($gDriveFile,''); }
+      $cfg = json_decode(file_get_contents($gDriveFile),true);
+      if (empty($cfg['path'])) {
+         // Create Folder
+         $result = $drive->createFolder($folder);
+         $cfg['path']['id'] = $result->id;
+         $cfg['path']['parents'] = $result->parents;
+         $cfg['path']['name'] = $folder;
+      }
+      file_put_contents($gDriveFile,json_encode($cfg,JSON_PRETTY_PRINT));
+      $res = $drive->uploadFile($filename, basename($filename),$cfg['path']['id']);
+      if (!empty($res)) {
+         $drive->createShareLink($res->id, 'reader', 'anyone');
+         $info = $drive->fileInfo($res->id);
+         if ($info) {
+            return $info;
+         } else {
+            return [
+               'id' => $res->id,
+               'name' => basename($filename)
+            ];
+         }
+      }
+   }
 
+   public function GoogleDriveDelete($id) {
+      if (!is_array($this->config['gdrive'])) { 
+         echo "Invalid config Dropbox".PHP_EOL;
+         return false; 
+      }
+      if ((
+         empty($this->config['gdrive']['client_id']) or empty($this->config['gdrive']['client_secret']))
+         and empty($this->config['gdrive']['refresh_token'])
+         ) {
+            echo "Gogole config not found!".PHP_EOL; 
+            return false; 
+         }
+      echo "Google Drive: ";
+      $drive = new GoogleDriveClient($this->config['gdrive']);
+      echo "Remove file {$id} from Google Drive\n";
+      $r = $drive->delete($id);
+      return $r;
    }
 }
 ?>

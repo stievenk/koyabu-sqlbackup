@@ -1,7 +1,10 @@
 <?php
 use Koyabu\MysqlBackup\Backup;
 use Koyabu\DropboxApi\Dropbox;
+use Koyabu\Googledriveapi\GoogleDriveClient;
 error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE & ~E_DEPRECATED & ~E_PARSE);
+ini_set('date.timezone','Asia/Makassar');
+set_time_limit(0);
 /**
  * Note:
  * You need to set your `mysqldump` execution to Global
@@ -18,6 +21,12 @@ error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE & ~E_DEPRECATED & ~E_PARSE);
  * For Windows recommended use .bat file
  */
 $config = array();
+
+// not available for version v1.0.1 ->removeOldFile(10,true);
+// Now file will auto remove and keep 3 file for default
+// you can change keepFile_count number (min: 3)
+$config['keepFile_count'] = 3;
+
 $config['mysql']['host']="localhost";
 $config['mysql']['user']="root";
 $config['mysql']['pass']="";

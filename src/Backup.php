@@ -212,14 +212,16 @@ class Backup {
          }
       }
       // Remove Old File Dropbox
-      if (count($cfg['dropbox']['files']) > $limit) {
-         for($i = 0; $i < count($cfg['dropbox']['files']) - $limit; $i++) {
-            $r = $this->DropboxDelete($cfg['dropbox']['files'][$i]['path_lower']);
-            print_r($r);
-            echo "REMOVE: ".$cfg['dropbox']['files'][$i]['path_lower'].PHP_EOL;
-            $data['dbx_remove']++;
+      if (!empty($cfg['dropbox']['files'])) {
+         if (count($cfg['dropbox']['files']) > $limit) {
+            for($i = 0; $i < count($cfg['dropbox']['files']) - $limit; $i++) {
+               $r = $this->DropboxDelete($cfg['dropbox']['files'][$i]['path_lower']);
+               print_r($r);
+               echo "REMOVE: ".$cfg['dropbox']['files'][$i]['path_lower'].PHP_EOL;
+               $data['dbx_remove']++;
+            }
+            $cfg['dropbox']['files'] = array_slice($cfg['dropbox']['files'],-$limit);
          }
-         $cfg['dropbox']['files'] = array_slice($cfg['dropbox']['files'],-$limit);
       }
 
       if ($this->config['gdrive']['sync'] === true) {
@@ -230,14 +232,16 @@ class Backup {
       }
 
       // Remove Old File Google Drive
-      if (count($cfg['gdrive']['files']) > $limit) {
-         for($i = 0; $i < count($cfg['gdrive']['files']) - $limit; $i++) {
-            $r = $this->GoogleDriveDelete($cfg['gdrive']['files'][$i]['id']);
-            print_r($r);
-            echo "REMOVE: ".$cfg['gdrive']['files'][$i]['name'].PHP_EOL;
-            $data['gdrive_remove']++;
+      if (!empty($cfg['gdrive']['files'])) {
+         if (count($cfg['gdrive']['files']) > $limit) {
+            for($i = 0; $i < count($cfg['gdrive']['files']) - $limit; $i++) {
+               $r = $this->GoogleDriveDelete($cfg['gdrive']['files'][$i]['id']);
+               print_r($r);
+               echo "REMOVE: ".$cfg['gdrive']['files'][$i]['name'].PHP_EOL;
+               $data['gdrive_remove']++;
+            }
+            $cfg['gdrive']['files'] = array_slice($cfg['gdrive']['files'],-$limit);
          }
-         $cfg['gdrive']['files'] = array_slice($cfg['gdrive']['files'],-$limit);
       }
 
       file_put_contents($savePath.'backup.json',json_encode($cfg,JSON_PRETTY_PRINT));

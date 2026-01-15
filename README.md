@@ -4,8 +4,16 @@
 composer require koyabu/mysqlbackup
 ```
 
+## Cron Job Example
+
+```
+# Run Backup every day at 03:00 AM
+0 3 * * * /usr/bin/php /home/myusername/sqlbackup.php > /dev/null 2>&1
+```
+
 ## Change log
 
+- METHOD $Backup->removeOldFile(10,true); not available on v1.0.1
 - Sync to Dropbox (https://github.com/stievenk/DropboxAPIClient)
 - Sync to Google Drive (https://github.com/stievenk/GoogleDriveAPI)
 
@@ -26,8 +34,6 @@ composer require koyabu/mysqlbackup
 - Save to Dropbox
 - Save to Google Drive
 - Auto Delete old file
-- Log File: /your-backup-dir/data.json
-- Log File: /your-backup-dir/backup.json >> backup log
 - Don't remove file /your-backup-dir/gdrive.json
   if you sync to Google Drive it will create new folder if folder_id not found in gdrive.json
 

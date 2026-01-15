@@ -173,18 +173,20 @@ class Backup {
          return false;
       }
       $cfg = json_decode(file_get_contents($savePath.'backup.json'),true);
-      if (count($cfg['filename']) > $limit) {
-         $saveFile = [];
-         for($i = count($cfg['filename']) - $limit; $i < count($cfg['filename']); $i++) {
-            $saveFile[] = $cfg['filename'][$i];
+      if (!empty($cfg['filename'])) {
+         if (count($cfg['filename']) > $limit) {
+            $saveFile = [];
+            for($i = count($cfg['filename']) - $limit; $i < count($cfg['filename']); $i++) {
+               $saveFile[] = $cfg['filename'][$i];
+            }
+            for ($i = 0; $i < count($cfg['filename']) - $limit; $i++) {
+               echo "REMOVE: ".$savePath . $cfg['filename'][$i].PHP_EOL;
+               unlink($savePath . $cfg['filename'][$i]);
+               $rm++;
+            }
+            print_r($saveFile);
+            $cfg['filename'] = $saveFile;
          }
-         for ($i = 0; $i < count($cfg['filename']) - $limit; $i++) {
-            echo "REMOVE: ".$savePath . $cfg['filename'][$i].PHP_EOL;
-            unlink($savePath . $cfg['filename'][$i]);
-            $rm++;
-         }
-         print_r($saveFile);
-         $cfg['filename'] = $saveFile;
       }
       $cfg['filename'] = array_unique($cfg['filename']);
       $cfg['last_update'] = date("Y-m-d H:i:s");

@@ -53,6 +53,7 @@ use Koyabu\MysqlBackup\Backup;
  * For Windows recommended use .bat file
  */
 $config = [
+    'keepFile_count' => 3,
     'mysql' => [
         'host' => 'localhost',
         'user' => 'root',
@@ -96,9 +97,12 @@ include 'vendor/autoload.php';
 
 $Backup = new Backup($config);
 
-// $Backup->removeOldFile($num_file_to_keep,$boolean_remove_remote_file_dropbox_gdrive);
-// Remove Old File and keep latest 10
-$Backup->removeOldFile(10,true);
+// $Backup->removeOldFile(10,true);
+// not available for version v1.0.1
+// Now file will auto remove and keep 3 file for default
+// you can change config keepFile_count number (min: 3)
+// see config on top --> $config['keepFile_count'] = 3;
+
 
 // Database to Skip backup
 $Backup->skipAlways(['performance_schema','mysql','test']);

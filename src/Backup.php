@@ -19,6 +19,9 @@ class Backup {
       $this->config = $config;
       $this->conn = new \mysqli($config['mysql']['host'],$config['mysql']['user'],$config['mysql']['pass'],$config['mysql']['data']);
       $this->getAllDatabases();
+      if ($this->config['keepFile_count'] < 3) {
+         $this->config['keepFile_count'] = 3;
+      }
       // $this->createDir();
    }
 
@@ -119,7 +122,7 @@ class Backup {
          if (in_array($Database, $this->skipDB)) {
             continue;
          }
-         $savePath = trim($this->BASE_DIR,'/') .'/'. $Database .'/';
+         $savePath = rtrim($this->BASE_DIR,'/') .'/'. $Database .'/';
          if (!file_exists($savePath)) {
             mkdir($savePath,0777,true);
          }

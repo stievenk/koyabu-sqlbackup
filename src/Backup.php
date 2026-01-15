@@ -167,7 +167,7 @@ class Backup {
    }
 
    function removeFile($Database,$limit = 3) {
-      $savePath = trim($this->BASE_DIR,'/') .'/'. $Database .'/';
+      $savePath = rtrim($this->BASE_DIR,'/') .'/'. $Database .'/';
       $rm = 0;
       if (!file_exists($savePath.'backup.json')) {
          return false;
@@ -194,7 +194,7 @@ class Backup {
 
    public function cloudSync($Database,$file) {
       $limit = $this->config['keepFile_count'] ?? 3;
-      $savePath = trim($this->BASE_DIR,'/') .'/'. $Database .'/';
+      $savePath = rtrim($this->BASE_DIR,'/') .'/'. $Database .'/';
       $cfg = json_decode(file_get_contents($savePath.'backup.json'),true);
 
       $data = [];
